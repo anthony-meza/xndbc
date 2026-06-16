@@ -1,6 +1,8 @@
-# nbdc
+# xndbc
 
-`nbdc` is a Python package for accessing and analyzing buoy data distributed by the National Data Buoy Center (NDBC) in `xarray`.
+> **Note:** `xndbc` is still in development. APIs, behavior, and documentation may change as the package matures.
+
+`xndbc` provides Python tools for discovering NOAA National Data Buoy Center (NDBC) stations and loading buoy observations into `xarray` objects.
 
 <p align="center">
   <strong>Buoy Temperature Trends (1992-2021) </strong><br>
@@ -9,31 +11,23 @@
 
 ## Installation
 
-### Using a Python virtual environment (recommended)
-
 ```bash
-# Create and activate a virtual environment
-$ python -m venv nbdc-env
-$ source nbdc-env/bin/activate  # On macOS/Linux
-$ nbdc-env\Scripts\activate     # On Windows
-
-# Install nbdc
-$ pip install git+https://github.com/anthony-meza/nbdc.git@main
+pip install git+https://github.com/anthony-meza/xndbc.git@main
 ```
 
 ## Quick Start
 
 ```python
-import nbdc
+import xndbc
 
 # List all available stations
-stations = nbdc.list_available(mode=None)
+stations = xndbc.list_available(mode=None)
 
 # List available historical standard meteorological files
-available = nbdc.list_available(mode="stdmet")
+available = xndbc.list_available(mode="stdmet")
 
 # List stations in a region
-caribbean = nbdc.list_available(
+caribbean = xndbc.list_available(
     mode=None,
     lon_min=-85,
     lon_max=-60,
@@ -42,32 +36,28 @@ caribbean = nbdc.list_available(
 )
 
 # Fetch historical data for specific stations
-data = nbdc.fetch_data(
+data = xndbc.fetch_data(
     station_ids=["42095"],
     years=range(2000, 2021),
     sample_rate="D"  # Daily averages
 )
-
-# Example notebooks include helper functions for plotting and coverage summaries.
 ```
-Check the `examples/` directory for Jupyter notebooks examples. 
 
+The `examples/` directory contains notebooks with complete workflows for regional station searches, historical data access, realtime data, plotting, and coverage summaries.
 
-### For developers (using Poetry)
+## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthony-meza/nbdc.git
-cd nbdc
+git clone https://github.com/anthony-meza/xndbc.git
+cd xndbc
 
-# Install dependencies with Poetry
-poetry install
+# Create and activate the development environment
+conda env create -f docs/environment.yml
+conda activate xndbc-dev
 
-# Build the package
-poetry build
-
-# Install locally
-pip install ./dist/nbdc-X.X.X-py3-none-any.whl
+# Run the test suite
+pytest
 ```
 
 ## Contributing
@@ -76,10 +66,8 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`nbdc` was created by Anthony Meza. It is licensed under the terms of the MIT license.
+`xndbc` was created by Anthony Meza. It is licensed under the terms of the MIT license.
 
 ## Credits
 
-`nbdc` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
-
-Development setup follows the [`py-pkgs`](https://py-pkgs.org/03-how-to-package-a-python.html) guide using Poetry for dependency management.
+`xndbc` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).

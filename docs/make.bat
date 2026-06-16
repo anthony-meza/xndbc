@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=nbdc
+set SPHINXPROJ=xndbc
 
 if "%1" == "" goto help
 

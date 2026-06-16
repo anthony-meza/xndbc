@@ -1,4 +1,4 @@
-name: nbdc-test
+name: xndbc-dev
 channels:
   - conda-forge
 dependencies:
@@ -14,5 +14,9 @@ dependencies:
   - nbclient>=0.10.0
   - nbformat>=5.10.0
   - ipykernel>=6.29.0
+  - sphinx
+  - myst-nb
+  - sphinx-autoapi
+  - sphinx-rtd-theme
   - pip:
-      - -e .[dev]
+      - -e ..[dev]

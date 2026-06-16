@@ -1,5 +1,5 @@
 """
-Basic tests for nbdc package that don't require network access.
+Basic tests for xndbc package that don't require network access.
 """
 
 import pytest
@@ -9,8 +9,8 @@ import numpy as np
 import sys
 from pathlib import Path
 
-import nbdc
-from nbdc import ndbc
+import xndbc
+from xndbc import ndbc
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 from helpers import assign_station_locations, compute_data_coverage
@@ -21,23 +21,23 @@ class TestPackageStructure:
 
     def test_version_available(self):
         """Test that package version is accessible."""
-        assert hasattr(nbdc, "__version__")
-        assert isinstance(nbdc.__version__, str)
+        assert hasattr(xndbc, "__version__")
+        assert isinstance(xndbc.__version__, str)
 
     def test_core_functions_available(self):
         """Test that core API functions are available at package level."""
-        assert hasattr(nbdc, "list_available")
-        assert hasattr(nbdc, "fetch_data")
+        assert hasattr(xndbc, "list_available")
+        assert hasattr(xndbc, "fetch_data")
 
     def test_small_public_api(self):
         """Test that the package-level namespace stays focused."""
-        assert not hasattr(nbdc, "compute_data_coverage")
-        assert not hasattr(nbdc, "filter_by_region")
-        assert not hasattr(nbdc, "plot_stations")
-        assert not hasattr(nbdc, "extract_historical_year")
-        assert not hasattr(nbdc, "historical_index")
-        assert not hasattr(nbdc, "box_filter_buoys")
-        assert not hasattr(nbdc, "list_stations")
+        assert not hasattr(xndbc, "compute_data_coverage")
+        assert not hasattr(xndbc, "filter_by_region")
+        assert not hasattr(xndbc, "plot_stations")
+        assert not hasattr(xndbc, "extract_historical_year")
+        assert not hasattr(xndbc, "historical_index")
+        assert not hasattr(xndbc, "box_filter_buoys")
+        assert not hasattr(xndbc, "list_stations")
 
 
 class TestDataProcessing:
@@ -194,7 +194,7 @@ YY MM DD hh WD WSPD GST WVHT DPD APD MWD BAR ATMP WTMP
         )
 
         monkeypatch.setattr(
-            "nbdc.core.get_stations",
+            "xndbc.core.get_stations",
             lambda: xr.Dataset(
                 coords={
                     "station_id": ["41001"],
@@ -204,7 +204,7 @@ YY MM DD hh WD WSPD GST WVHT DPD APD MWD BAR ATMP WTMP
             ),
         )
 
-        ds = nbdc.fetch_data("41001", years=2020, mode=["stdmet", "swden"])
+        ds = xndbc.fetch_data("41001", years=2020, mode=["stdmet", "swden"])
 
         assert {"WTMP", "SWDEN"}.issubset(ds.data_vars)
         assert ds.sizes["station_id"] == 1
@@ -220,7 +220,7 @@ YY MM DD hh WD WSPD GST WVHT DPD APD MWD BAR ATMP WTMP
 
         monkeypatch.setattr(ndbc, "extract_historical_year", fake_extract_historical_year)
         monkeypatch.setattr(
-            "nbdc.core.get_stations",
+            "xndbc.core.get_stations",
             lambda: xr.Dataset(
                 coords={
                     "station_id": ["41001", "41002"],
@@ -230,14 +230,14 @@ YY MM DD hh WD WSPD GST WVHT DPD APD MWD BAR ATMP WTMP
             ),
         )
 
-        ds = nbdc.fetch_data(["41001", "41002"], years=2020)
+        ds = xndbc.fetch_data(["41001", "41002"], years=2020)
 
         assert "WSPD" in ds.data_vars
         assert "wspd" not in ds.data_vars
 
     def test_list_available_mode_none_filters_stations_by_bounds(self, monkeypatch):
         monkeypatch.setattr(
-            "nbdc.core.get_stations",
+            "xndbc.core.get_stations",
             lambda: xr.Dataset(
                 coords={
                     "station_id": ["a", "b", "c"],
@@ -247,6 +247,6 @@ YY MM DD hh WD WSPD GST WVHT DPD APD MWD BAR ATMP WTMP
             ),
         )
 
-        result = nbdc.list_available(mode=None, lon_min=-80, lon_max=-60, lat_min=10, lat_max=30)
+        result = xndbc.list_available(mode=None, lon_min=-80, lon_max=-60, lat_min=10, lat_max=30)
 
         assert result.station_id.values.tolist() == ["a"]

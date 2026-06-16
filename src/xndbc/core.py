@@ -79,22 +79,22 @@ def fetch_data(
     Examples
     --------
     Fetch data for a single station and year:
-    >>> data = nbdc.fetch_data("tplm2", 2020)
+    >>> data = xndbc.fetch_data("tplm2", 2020)
 
     Fetch multiple years of data:
-    >>> data = nbdc.fetch_data("tplm2", range(2015, 2021))
+    >>> data = xndbc.fetch_data("tplm2", range(2015, 2021))
 
     Fetch data from multiple stations:
-    >>> data = nbdc.fetch_data(["tplm2", "44013"], range(2018, 2021))
+    >>> data = xndbc.fetch_data(["tplm2", "44013"], range(2018, 2021))
 
     Fetch with weekly averaging:
-    >>> data = nbdc.fetch_data("tplm2", 2020, sample_rate="W")
+    >>> data = xndbc.fetch_data("tplm2", 2020, sample_rate="W")
 
     Fetch realtime data:
-    >>> data = nbdc.fetch_data("tplm2", data_type="realtime", sample_rate="H")
+    >>> data = xndbc.fetch_data("tplm2", data_type="realtime", sample_rate="H")
 
     Inspect returned variables:
-    >>> data = nbdc.fetch_data("tplm2", range(2015, 2021))
+    >>> data = xndbc.fetch_data("tplm2", range(2015, 2021))
     >>> list(data.data_vars)
     """
     if isinstance(station_ids, str):

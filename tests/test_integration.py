@@ -1,5 +1,5 @@
 """
-Tests for nbdc package.
+Tests for xndbc package.
 
 Tests cover the main user-facing API as well as individual module functionality.
 """
@@ -11,8 +11,8 @@ import numpy as np
 import sys
 from pathlib import Path
 
-import nbdc
-from nbdc import station_metadata
+import xndbc
+from xndbc import station_metadata
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 from helpers import assign_station_locations, compute_data_coverage
@@ -25,7 +25,7 @@ class TestCoreAPI:
 
     def test_list_available_mode_none_returns_stations(self):
         """Test listing all stations."""
-        stations = nbdc.list_available(mode=None)
+        stations = xndbc.list_available(mode=None)
 
         assert isinstance(stations, xr.Dataset)
         assert "latitude" in stations.coords
@@ -34,7 +34,7 @@ class TestCoreAPI:
 
     def test_list_available(self):
         """Test listing historical file availability."""
-        available = nbdc.list_available(mode="stdmet")
+        available = xndbc.list_available(mode="stdmet")
 
         assert isinstance(available, xr.Dataset)
         assert {"station_id", "mode", "year", "url"}.issubset(available.data_vars)
@@ -43,7 +43,7 @@ class TestCoreAPI:
 
     def test_station_listing_is_xarray_only(self):
         """Test station listing always returns an xarray Dataset."""
-        stations = nbdc.list_available(mode=None)
+        stations = xndbc.list_available(mode=None)
 
         assert isinstance(stations, xr.Dataset)
         assert "latitude" in stations.coords
@@ -51,7 +51,7 @@ class TestCoreAPI:
 
     def test_list_available_mode_none_filters_by_bounds(self):
         """Station discovery can be geographically bounded."""
-        filtered = nbdc.list_available(mode=None, lon_min=-80, lon_max=-65, lat_min=25, lat_max=45)
+        filtered = xndbc.list_available(mode=None, lon_min=-80, lon_max=-65, lat_min=25, lat_max=45)
 
         assert isinstance(filtered, xr.Dataset)
         assert (filtered.latitude >= 25).all()
@@ -150,20 +150,20 @@ class TestPackageImports:
 
     def test_version_available(self):
         """Test that package version is accessible."""
-        assert hasattr(nbdc, "__version__")
-        assert isinstance(nbdc.__version__, str)
+        assert hasattr(xndbc, "__version__")
+        assert isinstance(xndbc.__version__, str)
 
     def test_core_functions_available(self):
         """Test that core API functions are available at package level."""
-        assert hasattr(nbdc, "list_available")
-        assert hasattr(nbdc, "fetch_data")
+        assert hasattr(xndbc, "list_available")
+        assert hasattr(xndbc, "fetch_data")
 
     def test_small_public_api(self):
         """Test that internals are not exported at package level."""
-        assert not hasattr(nbdc, "compute_data_coverage")
-        assert not hasattr(nbdc, "filter_by_region")
-        assert not hasattr(nbdc, "plot_stations")
-        assert not hasattr(nbdc, "get_buoy_metadata")
-        assert not hasattr(nbdc, "box_filter_buoys")
-        assert not hasattr(nbdc, "extract_historical_year")
-        assert not hasattr(nbdc, "list_stations")
+        assert not hasattr(xndbc, "compute_data_coverage")
+        assert not hasattr(xndbc, "filter_by_region")
+        assert not hasattr(xndbc, "plot_stations")
+        assert not hasattr(xndbc, "get_buoy_metadata")
+        assert not hasattr(xndbc, "box_filter_buoys")
+        assert not hasattr(xndbc, "extract_historical_year")
+        assert not hasattr(xndbc, "list_stations")

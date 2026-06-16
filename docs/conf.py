@@ -6,7 +6,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u"nbdc"
+project = u"xndbc"
 copyright = u"2024, Anthony Meza"
 author = u"Anthony Meza"
 
