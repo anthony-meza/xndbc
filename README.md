@@ -1,5 +1,5 @@
 # xndbc
-|docs|
+[![Documentation Status](https://readthedocs.org/projects/xndbc/badge/?version=latest)](https://xndbc.readthedocs.io/en/latest/?badge=latest)
 
 > **Note:** `xndbc` is still in development. APIs, behavior, and documentation may change as the package matures.
 
