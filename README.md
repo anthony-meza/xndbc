@@ -1,5 +1,5 @@
 # xndbc
-https://app.readthedocs.org/projects/<project-slug>/badge/?version=<version>&style=<style>
+|docs|
 
 > **Note:** `xndbc` is still in development. APIs, behavior, and documentation may change as the package matures.
 
