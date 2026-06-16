@@ -30,7 +30,3 @@ def get_stations() -> xr.Dataset:
     stations["longitude"] = metadata["LOCATION"].apply(lon)
 
     return stations.to_xarray().set_coords(["latitude", "longitude"])
-
-
-get_buoy_metadata = get_station_metadata
-get_buoy_stations = get_stations
