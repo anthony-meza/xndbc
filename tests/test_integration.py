@@ -1,5 +1,5 @@
 """
-Tests for xbuoy package.
+Tests for nbdc package.
 
 Tests cover the main user-facing API as well as individual module functionality.
 """
@@ -8,9 +8,14 @@ import pytest
 import xarray as xr
 import pandas as pd
 import numpy as np
+import sys
+from pathlib import Path
 
-import xbuoy
-from xbuoy import core, station_metadata, data_processing, geographic_filters
+import nbdc
+from nbdc import station_metadata
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
+from helpers import assign_station_locations, compute_data_coverage
 
 pytestmark = pytest.mark.integration
 
@@ -18,66 +23,37 @@ pytestmark = pytest.mark.integration
 class TestCoreAPI:
     """Test the high-level user-facing API."""
 
-    def test_list_stations(self):
-        """Test listing all buoy stations."""
-        stations = xbuoy.list_stations()
+    def test_list_available_mode_none_returns_stations(self):
+        """Test listing all stations."""
+        stations = nbdc.list_available(mode=None)
 
         assert isinstance(stations, xr.Dataset)
-        assert "latitude" in stations.data_vars
-        assert "longitude" in stations.data_vars
+        assert "latitude" in stations.coords
+        assert "longitude" in stations.coords
         assert len(stations.station_id) > 0
 
     def test_list_available(self):
         """Test listing historical file availability."""
-        available = xbuoy.list_available(mode="stdmet")
+        available = nbdc.list_available(mode="stdmet")
 
         assert isinstance(available, xr.Dataset)
         assert {"station_id", "mode", "year", "url"}.issubset(available.data_vars)
         assert available.sizes["file"] > 0
         assert (available["mode"] == "stdmet").all()
 
-    def test_list_stations_is_xarray_only(self):
+    def test_station_listing_is_xarray_only(self):
         """Test station listing always returns an xarray Dataset."""
-        stations = xbuoy.list_stations()
+        stations = nbdc.list_available(mode=None)
 
         assert isinstance(stations, xr.Dataset)
-        assert "latitude" in stations.data_vars
-        assert "longitude" in stations.data_vars
+        assert "latitude" in stations.coords
+        assert "longitude" in stations.coords
 
-    def test_list_stations_with_region(self):
-        """Test listing stations filtered by region."""
-        # Test Caribbean region
-        region = {
-            'lon_min': -85,
-            'lon_max': -60,
-            'lat_min': 10,
-            'lat_max': 25
-        }
-        stations = xbuoy.list_stations(region=region)
-
-        assert isinstance(stations, xr.Dataset)
-        # All stations should be within the specified region
-        assert (stations.latitude >= 10).all()
-        assert (stations.latitude <= 25).all()
-        assert (stations.longitude >= -85).all()
-        assert (stations.longitude <= -60).all()
-
-    def test_filter_by_region(self):
-        """Test filtering a dataset by geographic region."""
-        stations = xbuoy.list_stations()
-
-        # Filter to US East Coast
-        filtered = xbuoy.filter_by_region(
-            stations,
-            lon_min=-80,
-            lon_max=-65,
-            lat_min=25,
-            lat_max=45
-        )
+    def test_list_available_mode_none_filters_by_bounds(self):
+        """Station discovery can be geographically bounded."""
+        filtered = nbdc.list_available(mode=None, lon_min=-80, lon_max=-65, lat_min=25, lat_max=45)
 
         assert isinstance(filtered, xr.Dataset)
-        assert len(filtered.station_id) <= len(stations.station_id)
-        # Check bounds
         assert (filtered.latitude >= 25).all()
         assert (filtered.latitude <= 45).all()
 
@@ -85,119 +61,88 @@ class TestCoreAPI:
 class TestStationMetadata:
     """Test station metadata functions."""
 
-    def test_get_buoy_metadata(self):
+    def test_get_station_metadata(self):
         """Test fetching detailed buoy metadata."""
-        metadata = station_metadata.get_buoy_metadata()
+        metadata = station_metadata.get_station_metadata()
 
         assert isinstance(metadata, xr.Dataset)
         assert metadata.sizes["station_id"] > 0
         assert "LOCATION" in metadata.data_vars
         assert "NOTE" in metadata.data_vars
+        assert "buzm3" in metadata.station_id.values
 
-    def test_get_buoy_stations(self):
+    def test_get_stations(self):
         """Test getting simplified station information."""
-        stations = station_metadata.get_buoy_stations()
+        stations = station_metadata.get_stations()
 
         assert isinstance(stations, xr.Dataset)
-        assert "latitude" in stations.data_vars
-        assert "longitude" in stations.data_vars
-
-    def test_get_historical_bounds(self):
-        """Test getting historical bounds for a station."""
-        bounds = station_metadata.get_historical_bounds("tplm2")
-
-        assert isinstance(bounds, dict)
-        assert "tplm2" in bounds
-        # Bounds should be a tuple of (min_year, max_year) or (nan, nan)
-        assert len(bounds["tplm2"]) == 2
-
-
-class TestGeographicFilters:
-    """Test geographic filtering functions."""
-
-    def test_box_filter_global(self):
-        """Test box filter with global bounds (no filtering)."""
-        stations = xbuoy.list_stations()
-        filtered = geographic_filters.box_filter_buoys(stations)
-
-        # Should return all stations
-        assert len(filtered.station_id) == len(stations.station_id)
-
-    def test_box_filter_custom_region(self):
-        """Test box filter with custom region."""
-        stations = xbuoy.list_stations()
-
-        # Filter to a small region
-        filtered = geographic_filters.box_filter_buoys(
-            stations,
-            lon1=-75,
-            lon2=-70,
-            lat1=35,
-            lat2=40
-        )
-
-        assert len(filtered.station_id) <= len(stations.station_id)
-        # All stations should be within bounds
-        assert (filtered.latitude >= 35).all()
-        assert (filtered.latitude <= 40).all()
+        assert "latitude" in stations.coords
+        assert "longitude" in stations.coords
+        assert stations.latitude.sel(station_id="buzm3").item() == 41.397
 
 
 class TestDataProcessing:
     """Test data processing functions."""
 
-    def test_add_variable_coverage(self):
-        """Test computing data coverage for a variable."""
-        # Create a simple test dataset
+    def test_compute_data_coverage_returns_standalone_dataset(self):
+        """Coverage returns a standalone dataset and leaves inputs unchanged."""
         ds = xr.Dataset({
             "WTMP": (["station_id", "time"], np.random.rand(3, 10)),
+            "WSPD": (["station_id", "time"], np.random.rand(3, 10)),
             "station_id": ["A", "B", "C"],
-            "time": pd.date_range("2020-01-01", periods=10)
+            "time": pd.date_range("2020-01-01", periods=10),
+            "latitude": ("station_id", [40.0, 41.0, 42.0]),
+            "longitude": ("station_id", [-70.0, -71.0, -72.0]),
         })
+        ds = ds.set_coords(["latitude", "longitude"])
+        original = ds.copy(deep=True)
 
-        # Add some NaN values
         ds["WTMP"].values[0, 0:5] = np.nan  # 50% coverage for station A
+        original["WTMP"].values[0, 0:5] = np.nan
 
-        result = data_processing.add_variable_coverage(ds, varname="WTMP")
+        result = compute_data_coverage(ds)
 
+        xr.testing.assert_identical(ds, original)
         assert "WTMP_coverage" in result.data_vars
+        assert "WSPD_coverage" in result.data_vars
+        assert "latitude" in result.coords
+        assert "longitude" in result.coords
         assert result["WTMP_coverage"].sel(station_id="A").values == 50.0
         assert result["WTMP_coverage"].sel(station_id="B").values == 100.0
 
     def test_compute_data_coverage(self):
-        """Test the compute_data_coverage alias function."""
+        """Test coverage for all time-dependent variables."""
         # Create a simple test dataset
         ds = xr.Dataset({
             "WSPD": (["station_id", "time"], np.random.rand(2, 10)),
+            "station_name": ("station_id", ["A", "B"]),
             "station_id": ["A", "B"],
             "time": pd.date_range("2020-01-01", periods=10)
         })
 
-        result = data_processing.compute_data_coverage(ds, variable="WSPD")
+        result = compute_data_coverage(ds)
 
         assert "WSPD_coverage" in result.data_vars
+        assert "station_name_coverage" not in result.data_vars
         assert (result["WSPD_coverage"] == 100.0).all()
 
-    def test_add_latitude_longitude(self):
-        """Test adding lat/lon coordinates from reference dataset."""
-        # Create test datasets
-        data = xr.Dataset({
-            "WTMP": (["station_id", "time"], np.random.rand(2, 5)),
-            "station_id": ["A", "B"],
-            "time": pd.date_range("2020-01-01", periods=5)
-        })
+    def test_assign_station_locations_overrides_missing_metadata(self):
+        ds = xr.Dataset(
+            coords={
+                "station_id": ["buzm3", "46254"],
+                "latitude": ("station_id", [np.nan, 32.868]),
+                "longitude": ("station_id", [np.nan, -117.267]),
+            }
+        )
 
-        reference = xr.Dataset({
-            "latitude": (["station_id"], [40.0, 42.0]),
-            "longitude": (["station_id"], [-70.0, -72.0]),
-            "station_id": ["A", "B"]
-        })
+        result = assign_station_locations(
+            ds,
+            {"buzm3": {"latitude": 41.397, "longitude": -71.033}},
+        )
 
-        result = data_processing.add_latitude_longitude(data, reference)
-
-        assert "latitude" in result.data_vars
-        assert "longitude" in result.data_vars
-        assert result["latitude"].sel(station_id="A").values == 40.0
-        assert result["longitude"].sel(station_id="B").values == -72.0
+        assert result.latitude.sel(station_id="buzm3").item() == 41.397
+        assert result.longitude.sel(station_id="buzm3").item() == -71.033
+        assert result.longitude.sel(station_id="46254").item() == -117.267
 
 
 class TestPackageImports:
@@ -205,19 +150,20 @@ class TestPackageImports:
 
     def test_version_available(self):
         """Test that package version is accessible."""
-        assert hasattr(xbuoy, "__version__")
-        assert isinstance(xbuoy.__version__, str)
+        assert hasattr(nbdc, "__version__")
+        assert isinstance(nbdc.__version__, str)
 
     def test_core_functions_available(self):
         """Test that core API functions are available at package level."""
-        assert hasattr(xbuoy, "list_stations")
-        assert hasattr(xbuoy, "fetch_data")
-        assert hasattr(xbuoy, "filter_by_region")
-        assert hasattr(xbuoy, "plot_stations")
+        assert hasattr(nbdc, "list_available")
+        assert hasattr(nbdc, "fetch_data")
 
-    def test_advanced_functions_available(self):
-        """Test that advanced functions are still available."""
-        assert hasattr(xbuoy, "get_buoy_metadata")
-        assert hasattr(xbuoy, "get_buoy_stations")
-        assert hasattr(xbuoy, "box_filter_buoys")
-        assert hasattr(xbuoy, "compute_data_coverage")
+    def test_small_public_api(self):
+        """Test that internals are not exported at package level."""
+        assert not hasattr(nbdc, "compute_data_coverage")
+        assert not hasattr(nbdc, "filter_by_region")
+        assert not hasattr(nbdc, "plot_stations")
+        assert not hasattr(nbdc, "get_buoy_metadata")
+        assert not hasattr(nbdc, "box_filter_buoys")
+        assert not hasattr(nbdc, "extract_historical_year")
+        assert not hasattr(nbdc, "list_stations")

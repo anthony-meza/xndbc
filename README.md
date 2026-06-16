@@ -1,6 +1,6 @@
-# xbuoy
+# nbdc
 
-`xbuoy` is a Python package for accessing and analyzing buoy data distributed by the National Data Buoy Center (NDBC) in `xarray`.
+`nbdc` is a Python package for accessing and analyzing buoy data distributed by the National Data Buoy Center (NDBC) in `xarray`.
 
 <p align="center">
   <strong>Buoy Temperature Trends (1992-2021) </strong><br>
@@ -13,42 +13,42 @@
 
 ```bash
 # Create and activate a virtual environment
-$ python -m venv xbuoy-env
-$ source xbuoy-env/bin/activate  # On macOS/Linux
-$ xbuoy-env\Scripts\activate     # On Windows
+$ python -m venv nbdc-env
+$ source nbdc-env/bin/activate  # On macOS/Linux
+$ nbdc-env\Scripts\activate     # On Windows
 
-# Install xbuoy
-$ pip install git+https://github.com/anthony-meza/xbuoy.git@main
+# Install nbdc
+$ pip install git+https://github.com/anthony-meza/nbdc.git@main
 ```
 
 ## Quick Start
 
 ```python
-import xbuoy
+import nbdc
 
-# List all available buoy stations
-stations = xbuoy.list_stations()
+# List all available stations
+stations = nbdc.list_available(mode=None)
 
 # List available historical standard meteorological files
-available = xbuoy.list_available(mode="stdmet")
+available = nbdc.list_available(mode="stdmet")
 
-# Filter to a specific region (e.g., Caribbean)
-caribbean = xbuoy.list_stations(
-    region={'lon_min': -85, 'lon_max': -60, 'lat_min': 10, 'lat_max': 25}
+# List stations in a region
+caribbean = nbdc.list_available(
+    mode=None,
+    lon_min=-85,
+    lon_max=-60,
+    lat_min=10,
+    lat_max=25,
 )
 
-# Visualize station locations
-fig, ax = xbuoy.plot_stations(caribbean)
-
 # Fetch historical data for specific stations
-data = xbuoy.fetch_data(
+data = nbdc.fetch_data(
     station_ids=["42095"],
     years=range(2000, 2021),
     sample_rate="D"  # Daily averages
 )
 
-# Plot stations colored by data coverage
-fig, ax = xbuoy.plot_stations(data, variable="wtemp_coverage")
+# Example notebooks include helper functions for plotting and coverage summaries.
 ```
 Check the `examples/` directory for Jupyter notebooks examples. 
 
@@ -57,8 +57,8 @@ Check the `examples/` directory for Jupyter notebooks examples.
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthony-meza/xbuoy.git
-cd xbuoy
+git clone https://github.com/anthony-meza/nbdc.git
+cd nbdc
 
 # Install dependencies with Poetry
 poetry install
@@ -67,7 +67,7 @@ poetry install
 poetry build
 
 # Install locally
-pip install ./dist/xbuoy-X.X.X-py3-none-any.whl
+pip install ./dist/nbdc-X.X.X-py3-none-any.whl
 ```
 
 ## Contributing
@@ -76,10 +76,10 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`xbuoy` was created by Anthony Meza. It is licensed under the terms of the MIT license.
+`nbdc` was created by Anthony Meza. It is licensed under the terms of the MIT license.
 
 ## Credits
 
-`xbuoy` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
+`nbdc` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
 
 Development setup follows the [`py-pkgs`](https://py-pkgs.org/03-how-to-package-a-python.html) guide using Poetry for dependency management.

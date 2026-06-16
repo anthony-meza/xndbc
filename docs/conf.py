@@ -6,7 +6,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u"xbuoy"
+project = u"nbdc"
 copyright = u"2024, Anthony Meza"
 author = u"Anthony Meza"
 
