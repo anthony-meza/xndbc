@@ -1,0 +1,22 @@
+name: xndbc-dev
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - numpy>=2.0.0
+  - pandas>=2.2.0
+  - xarray>=2024.9.0
+  - matplotlib>=3.9.2
+  - cartopy>=0.24.1
+  - tqdm>=4.66.0
+  - pytest>=8.0.0
+  - nbclient>=0.10.0
+  - nbformat>=5.10.0
+  - ipykernel>=6.29.0
+  - sphinx
+  - myst-nb
+  - sphinx-autoapi
+  - sphinx-rtd-theme
+  - pip:
+      - -e ..[dev]

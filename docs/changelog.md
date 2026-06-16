@@ -1,2 +1,3 @@
-```{include} ../CHANGELOG.md
-```
+# Changelog
+
+Release notes will be added here as `xndbc` matures.

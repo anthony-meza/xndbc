@@ -1,6 +1,8 @@
-# xbuoy
+# xndbc
 
-`xbuoy` is a Python package for accessing and analyzing buoy data distributed by the National Data Buoy Center (NDBC) in `xarray`.
+> **Note:** `xndbc` is still in development. APIs, behavior, and documentation may change as the package matures.
+
+`xndbc` provides Python tools for discovering NOAA National Data Buoy Center (NDBC) stations and loading buoy observations into `xarray` objects.
 
 <p align="center">
   <strong>Buoy Temperature Trends (1992-2021) </strong><br>
@@ -9,62 +11,53 @@
 
 ## Installation
 
-### Using a Python virtual environment (recommended)
-
 ```bash
-# Create and activate a virtual environment
-$ python -m venv xbuoy-env
-$ source xbuoy-env/bin/activate  # On macOS/Linux
-$ xbuoy-env\Scripts\activate     # On Windows
-
-# Install xbuoy
-$ pip install git+https://github.com/anthony-meza/xbuoy.git@main
+pip install git+https://github.com/anthony-meza/xndbc.git@main
 ```
 
 ## Quick Start
 
 ```python
-import xbuoy
+import xndbc
 
-# List all available buoy stations
-stations = xbuoy.list_stations()
+# List all available stations
+stations = xndbc.list_available(mode=None)
 
-# Filter to a specific region (e.g., Caribbean)
-caribbean = xbuoy.list_stations(
-    region={'lon_min': -85, 'lon_max': -60, 'lat_min': 10, 'lat_max': 25}
+# List available historical standard meteorological files
+available = xndbc.list_available(mode="stdmet")
+
+# List stations in a region
+caribbean = xndbc.list_available(
+    mode=None,
+    lon_min=-85,
+    lon_max=-60,
+    lat_min=10,
+    lat_max=25,
 )
 
-# Visualize station locations
-fig, ax = xbuoy.plot_stations(caribbean)
-
 # Fetch historical data for specific stations
-data = xbuoy.fetch_data(
+data = xndbc.fetch_data(
     station_ids=["42095"],
     years=range(2000, 2021),
     sample_rate="D"  # Daily averages
 )
-
-# Plot stations colored by data coverage
-fig, ax = xbuoy.plot_stations(data, variable="wtemp_coverage")
 ```
-Check the `examples/` directory for Jupyter notebooks examples. 
 
+The `examples/` directory contains notebooks with complete workflows for regional station searches, historical data access, realtime data, plotting, and coverage summaries.
 
-### For developers (using Poetry)
+## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthony-meza/xbuoy.git
-cd xbuoy
+git clone https://github.com/anthony-meza/xndbc.git
+cd xndbc
 
-# Install dependencies with Poetry
-poetry install
+# Create and activate the development environment
+conda env create -f docs/environment.yml
+conda activate xndbc-dev
 
-# Build the package
-poetry build
-
-# Install locally
-pip install ./dist/xbuoy-X.X.X-py3-none-any.whl
+# Run the test suite
+pytest
 ```
 
 ## Contributing
@@ -73,10 +66,8 @@ Interested in contributing? Check out the contributing guidelines. Please note t
 
 ## License
 
-`xbuoy` was created by Anthony Meza. It is licensed under the terms of the MIT license.
+`xndbc` was created by Anthony Meza. It is licensed under the terms of the MIT license.
 
 ## Credits
 
-`xbuoy` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).
-
-Development setup follows the [`py-pkgs`](https://py-pkgs.org/03-how-to-package-a-python.html) guide using Poetry for dependency management.
+`xndbc` was created with [`cookiecutter`](https://cookiecutter.readthedocs.io/en/latest/) and the `py-pkgs-cookiecutter` [template](https://github.com/py-pkgs/py-pkgs-cookiecutter).

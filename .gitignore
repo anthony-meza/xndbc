@@ -13,4 +13,5 @@ examples/*.nc
 /examples/local_folder
 /.conda
 /dist
+/docs/_build/
 poetry.lock
