@@ -1,7 +1,7 @@
 import xarray as xr
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
-from .ndbc import get_station_records, list_available as ndbc_list_available
+from .ndbc_parser import _list_historical_files, fetch_station_records
 from .station_metadata import get_stations
 
 
@@ -12,12 +12,18 @@ def list_available(
     lat_min: float = -90,
     lat_max: float = 90,
 ) -> xr.Dataset:
-    """List stations or historical NDBC files as an xarray dataset."""
+    """List NDBC stations or historical files as an ``xarray.Dataset``.
+
+    When ``mode`` is ``None``, this returns station metadata filtered by the
+    longitude/latitude bounds. When ``mode`` is a data mode such as
+    ``"stdmet"``, this returns historical file availability for stations within
+    the same bounds.
+    """
     stations = _filter_stations(get_stations(), lon_min, lon_max, lat_min, lat_max)
     if mode is None:
         return stations
 
-    available = ndbc_list_available(mode=mode).to_dataframe()
+    available = _list_historical_files(mode=mode).to_dataframe()
     station_ids = {str(station_id) for station_id in stations.station_id.values}
     available = available.loc[available["station_id"].isin(station_ids)]
     available = available.reset_index(drop=True)
@@ -46,13 +52,15 @@ def fetch_data(
     years: Optional[Union[int, List[int]]] = None,
     sample_rate: str = "D",
     data_type: str = "historical",
-    mode: Union[str, List[str]] = "stdmet",
+    mode: str = "stdmet",
     max_workers: int = 6,
 ) -> xr.Dataset:
-    """Fetch historical or realtime buoy data for stations.
+    """Fetch historical or realtime buoy observations for one or more stations.
 
-    This is the main function for retrieving buoy observational data. It handles
-    data download and adds station location coordinates when available.
+    This is the main package entry point for retrieving NDBC observations. It
+    normalizes station ids, years, modes, and data type before delegating to the
+    NDBC record fetcher, then attaches station latitude/longitude coordinates
+    when station metadata is available.
 
     Parameters
     ----------
@@ -65,9 +73,10 @@ def fetch_data(
         Temporal resampling rate (default: "D" for daily).
         Options: "D" (daily), "W" (weekly), "M" (monthly), "H" (hourly).
     data_type : {"historical", "realtime"}, optional
-        Which NDBC feed to retrieve. Historical data is the default.
-    mode : str or list of str, optional
-        Which NDBC data mode(s) to retrieve (default is "stdmet").
+        Which NDBC feed to retrieve. Historical data is the default and requires
+        ``years``.
+    mode : str, optional
+        Which NDBC data mode to retrieve (default is "stdmet").
     max_workers : int, optional
         Maximum number of concurrent file reads per station.
 
@@ -103,14 +112,20 @@ def fetch_data(
         station_ids = list(getattr(station_ids, "values", station_ids))
     station_ids = [str(station_id).lower() for station_id in station_ids]
     data_type = data_type.lower()
-    mode = mode.lower() if isinstance(mode, str) else [m.lower() for m in mode]
+    if data_type not in {"historical", "realtime"}:
+        raise ValueError("data_type must be 'historical' or 'realtime'")
+    if data_type == "historical" and years is None:
+        raise ValueError("years is required when data_type='historical'")
+    if not isinstance(mode, str):
+        raise TypeError("mode must be a single NDBC data mode string")
+    mode = mode.lower()
     if years is not None:
         if isinstance(years, int):
             years = [years]
         elif isinstance(years, range):
             years = list(years)
 
-    dataset = get_station_records(
+    dataset = fetch_station_records(
         station_list=station_ids,
         years=years,
         sample_rate=sample_rate,
