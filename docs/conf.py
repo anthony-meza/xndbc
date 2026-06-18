@@ -13,7 +13,7 @@ source_suffix = {
 master_doc = "index"
 exclude_patterns = ["_build"]
 html_theme = "sphinx_rtd_theme"
-nb_execution_mode = "off"
+nb_execution_mode = "force"
 
 
 HERE = Path(__file__).resolve()
