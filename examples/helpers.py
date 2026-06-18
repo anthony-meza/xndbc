@@ -11,19 +11,6 @@ def compute_data_coverage(ds):
     return xr.Dataset(coverage)
 
 
-def assign_station_locations(ds, locations):
-    station_ids = [str(station_id) for station_id in ds.station_id.values]
-    latitude = [
-        locations.get(station_id.lower(), {}).get("latitude", ds.latitude.sel(station_id=station_id).item())
-        for station_id in station_ids
-    ]
-    longitude = [
-        locations.get(station_id.lower(), {}).get("longitude", ds.longitude.sel(station_id=station_id).item())
-        for station_id in station_ids
-    ]
-    return ds.assign_coords(latitude=("station_id", latitude), longitude=("station_id", longitude))
-
-
 def plot_stations(ds, variable=None, ax=None, add_labels = True):
 
 
@@ -38,6 +25,13 @@ def plot_stations(ds, variable=None, ax=None, add_labels = True):
     gridlines = ax.gridlines(draw_labels=True, alpha=0.25)
     gridlines.top_labels = False
     gridlines.right_labels = False
+    plot_kwargs = {
+        "edgecolors": "black",
+        "linewidths": 0.4,
+        "s": 36,
+        "alpha": 0.9,
+        "transform": transform,
+    }
 
     valid_location = ds.latitude.notnull() & ds.longitude.notnull()
     located = ds.where(valid_location, drop=True)
@@ -46,37 +40,26 @@ def plot_stations(ds, variable=None, ax=None, add_labels = True):
             located.longitude,
             located.latitude,
             c="tab:red",
-            edgecolors="black",
-            linewidths=0.4,
-            s=36,
-            alpha=0.9,
-            transform=transform,
+            **plot_kwargs,
         )
     else:
         has_data = located[variable].notnull()
         missing = located.where(~has_data, drop=True)
         plotted = located.where(has_data, drop=True)
         if missing.sizes.get("station_id", 0):
+            missing_plot_kwargs = {**plot_kwargs, "alpha": 0.85}
             ax.scatter(
                 missing.longitude,
                 missing.latitude,
                 c="0.8",
-                edgecolors="black",
-                linewidths=0.4,
-                s=36,
-                alpha=0.85,
                 label="no data",
-                transform=transform,
+                **missing_plot_kwargs,
             )
         scatter = ax.scatter(
             plotted.longitude,
             plotted.latitude,
             c=plotted[variable],
-            edgecolors="black",
-            linewidths=0.4,
-            s=36,
-            alpha=0.9,
-            transform=transform,
+            **plot_kwargs,
         )
         fig.colorbar(scatter, ax=ax, label=variable)
         if missing.sizes.get("station_id", 0):

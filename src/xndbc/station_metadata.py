@@ -5,7 +5,7 @@ NDBC_STATION_TABLE_URL = "https://www.ndbc.noaa.gov/data/stations/station_table.
 
 
 def get_station_metadata() -> xr.Dataset:
-    """Fetch raw NDBC station metadata."""
+    """Fetch the raw NDBC station metadata table as an ``xarray.Dataset``."""
     stations = pd.read_csv(
         NDBC_STATION_TABLE_URL,
         sep="|",
@@ -19,14 +19,13 @@ def get_station_metadata() -> xr.Dataset:
 
 
 def get_stations() -> xr.Dataset:
-    """Get station notes and location coordinates."""
+    """Return simplified station notes with latitude/longitude coordinates."""
     metadata = get_station_metadata().to_dataframe()
-    lat = lambda location: float(location.split()[0]) * (1 if location.split()[1] == "N" else -1)
-    lon = lambda location: float(location.split()[2]) * (1 if location.split()[3] == "E" else -1)
+    location = metadata["LOCATION"].str.split(expand=True)
 
     stations = pd.DataFrame(index=metadata.index.astype(str))
     stations["notes"] = metadata["NOTE"]
-    stations["latitude"] = metadata["LOCATION"].apply(lat)
-    stations["longitude"] = metadata["LOCATION"].apply(lon)
+    stations["latitude"] = location[0].astype(float) * location[1].map({"N": 1, "S": -1})
+    stations["longitude"] = location[2].astype(float) * location[3].map({"E": 1, "W": -1})
 
     return stations.to_xarray().set_coords(["latitude", "longitude"])
