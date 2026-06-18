@@ -6,7 +6,8 @@ build:
     python: "miniforge3-25.11"
 
 sphinx:
-  configuration: docs/conf.py
+  builder: html
+  configuration: conf.py
 
 conda:
   environment: docs/environment.yml
