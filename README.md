@@ -3,7 +3,8 @@
 
 > **Note:** `xndbc` is still in development. APIs, behavior, and documentation may change as the package matures.
 
-`xndbc` provides Python tools to pull data from NOAA National Data Buoy Center (NDBC) stations and load these observations into `xarray` objects.
+`xndbc` provides Python tools to pull historical and realtime data from NOAA National Data Buoy Center (NDBC) stations and load these observations into `xarray` objects to enable 
+faster analysis and data augmentation.
 
 <p align="center">
   <strong>Buoy Temperature Trends (1992-2021) </strong><br>
